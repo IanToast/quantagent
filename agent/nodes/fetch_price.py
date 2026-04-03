@@ -1,15 +1,35 @@
 import yfinance as yf
 from models.reports import PriceSummary 
+from tenacity import retry, stop_after_attempt, wait_exponential
 
+# TODO: add timeout handling to prevent yfinance from hanging indefinitely
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    reraise=True
+)
+def fetch_price_from_yfinance(ticker):
+    try:
+        t = yf.Ticker(ticker)
+        df = t.history(period="2y")
+    except Exception as e:
+        raise ConnectionError(f"yfinance request failed: {e}")
+    
+    if df is None or df.empty:
+        raise ValueError(f"no data returned for {ticker}")
+    
+    return df, t.info
 
 def fetch_price_node(state):
+    errors = state.get("errors") or []
     ticker = state["ticker"].upper()
 
-    t = yf.Ticker(ticker)
-    df = t.history(period="2y")
-    info = t.info
-    calculations_limited = False
+    try:
+        df, info = fetch_price_from_yfinance(ticker)
+    except Exception as e:
+        return {"errors": errors + [f"fetch_price failed: {e}"]}
 
+    calculations_limited = False
     current_price = float(df["Close"].iloc[-1])
 
     def percent_change(days):
@@ -42,6 +62,7 @@ def fetch_price_node(state):
         "price_data": df,
         "price_summary": price_summary,
         "company_name":company_name,
-        "sector": sector
+        "sector": sector,
+        "errors": errors
     }
 

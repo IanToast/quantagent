@@ -1,0 +1,4 @@
+yfinance
+tenacity
+pydantic
+python-dotenv

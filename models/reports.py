@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from typing import Optional
 
 class PriceSummary(BaseModel):
     ticker: str
@@ -13,3 +13,10 @@ class PriceSummary(BaseModel):
     week_52_low: float
     avg_volume_20d: float
     calculations_limited: bool
+
+class NewsItem(BaseModel):
+    title: str
+    source: str
+    published: Optional[str]
+    summary: Optional[str]
+    link: Optional[str]

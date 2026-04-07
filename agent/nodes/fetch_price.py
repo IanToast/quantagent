@@ -65,4 +65,3 @@ def fetch_price_node(state):
         "sector": sector,
         "errors": errors
     }
-

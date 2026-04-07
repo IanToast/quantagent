@@ -2,3 +2,4 @@ yfinance
 tenacity
 pydantic
 python-dotenv
+feedparser

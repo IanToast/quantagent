@@ -28,9 +28,6 @@ def fetch_news_node(state):
         "group", "technologies", "systems", "inc", "ltd", 
         "co", "corp", "plc", "llc", "new", "platforms", "of", "the"
     }
-    # for w in company_name.split():
-    #     stripped = w.lower().strip(".,")
-    #     print(f"'{w}' -> '{stripped}' -> in noise_words: {stripped in noise_words}")
     keywords = []
     if len(ticker) > 1:
         keywords.append(ticker.lower())
@@ -40,7 +37,6 @@ def fetch_news_node(state):
         if len(w) > 1 and w.lower().strip(".,") not in noise_words
     ]))
     keywords = list(set(keywords)) # remove duplicate words
-    print(f"[fetch_news] Keywords: {keywords}")
 
     try:
         feed = fetch_news_from_feedparser(ticker)

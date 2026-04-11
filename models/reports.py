@@ -20,3 +20,25 @@ class NewsItem(BaseModel):
     published: Optional[str]
     summary: Optional[str]
     link: Optional[str]
+
+class QuantSignals(BaseModel):
+    ticker: str
+    available_days: int
+    sma20: float
+    sma50: float
+    sma200: float
+    price_vs_sma20: float
+    price_vs_sma50: float
+    price_vs_sma200: float
+    golden_cross: bool
+    death_cross: bool
+    rsi_14: Optional[float] = None
+    macd_line: Optional[float] = None
+    macd_signal: Optional[float] = None
+    macd_histogram: Optional[float] = None
+    momentum_zscore: Optional[float] = None
+    realized_vol_20d: float
+    beta_60d: Optional[float] = None
+    max_drawdown_1y: float
+    sharpe_ratio_1y: Optional[float] = None
+    calculations_limited: bool

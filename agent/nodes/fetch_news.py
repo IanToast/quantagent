@@ -1,6 +1,7 @@
 import feedparser
 from models.reports import NewsItem
 from tenacity import retry, stop_after_attempt, wait_exponential
+TOTAL_FETCHED = 60
 
 # TODO: add timeout handling to prevent feedparser from hanging indefinitely
 
@@ -45,7 +46,7 @@ def fetch_news_node(state):
     
     news_items = []
 
-    for item in feed.entries[:30]:
+    for item in feed.entries[:TOTAL_FETCHED]:
         text = f"{item.title} {item.summary}".lower()
         if any([keyword in text for keyword in keywords]):
             news_item = NewsItem(
@@ -56,14 +57,16 @@ def fetch_news_node(state):
                 link=item.link
             )
             news_items.append(news_item)
-        else:
-            print(f"Filtered out text {text}.")
-            print("-----")
-            print(keywords)
-            print("-----")
-            print([keyword for keyword in keywords if keyword in text])
+        # else:
+            # print(f"Filtered out text {text}.")
+            # print("-----")
+            # print(keywords)
+            # print("-----")
+            # print([keyword for keyword in keywords if keyword in text])
            
     return {
         "news_items": news_items,
+        "news_filtered_count": TOTAL_FETCHED - len(news_items),
+        "news_total_count": TOTAL_FETCHED,
         "errors": errors
     }

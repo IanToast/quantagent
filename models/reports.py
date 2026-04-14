@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Optional, Literal
 
 class PriceSummary(BaseModel):
     ticker: str
@@ -42,3 +42,23 @@ class QuantSignals(BaseModel):
     max_drawdown_1y: float
     sharpe_ratio_1y: Optional[float] = None
     calculations_limited: bool
+
+class Theme(BaseModel):
+    trajectory: Literal["building", "peaking", "fading", "stable"]
+    description: str
+
+class RiskFlag(BaseModel):
+    severity: Literal["low", "medium", "high"]
+    description: str
+
+class SentimentReport(BaseModel):
+    overall: Literal["bullish", "neutral", "bearish"]
+    confidence: Literal["low", "medium", "high"]
+    score: float = Field(ge=-1.0, le=1.0)
+    sentiment_trend: Literal["improving", "deteriorating", "stable", "mixed"]
+    themes: list[Theme]
+    inflections: list[str]
+    risk_flags: list[RiskFlag]
+    catalysts: list[str]
+    latent_risks: list[str]
+    headline_count: int

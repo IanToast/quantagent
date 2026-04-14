@@ -1,7 +1,7 @@
 import feedparser
 from models.reports import NewsItem
 from tenacity import retry, stop_after_attempt, wait_exponential
-TOTAL_FETCHED = 60
+TOTAL_FETCHED = 30
 
 # TODO: add timeout handling to prevent feedparser from hanging indefinitely
 
@@ -10,9 +10,12 @@ TOTAL_FETCHED = 60
     wait=wait_exponential(multiplier=1, min=2, max=10),
     reraise=True
 )
-def fetch_news_from_feedparser(ticker):
+def fetch_news_from_feedparser(url):
     try:
-        feed = feedparser.parse(f"https://finance.yahoo.com/rss/headline?s={ticker}")
+        feed = feedparser.parse(
+            url,
+            request_headers={"User-Agent": "Mozilla/5.0"}
+        )
     except Exception as e:
         raise ConnectionError(f"yfinance request failed: {e}")
     if feed.bozo and len(feed.entries)==0:
@@ -23,6 +26,11 @@ def fetch_news_node(state):
     errors = state.get("errors") or []
     ticker = state["ticker"].upper()
     company_name = state.get("company_name") or ""
+
+    feeds = [
+        f"https://finance.yahoo.com/rss/headline?s={ticker}",
+        f"https://seekingalpha.com/api/sa/combined/{ticker}.xml",
+    ]
     # TODO: find a better way to filter for company names.
     noise_words = {
         "corporation", "incorporated", "company", "holdings", 
@@ -39,30 +47,33 @@ def fetch_news_node(state):
     ]))
     keywords = list(set(keywords)) # remove duplicate words
 
-    try:
-        feed = fetch_news_from_feedparser(ticker)
-    except Exception as e:
-        return {"errors": errors + [f"fetch_news failed: {e}"]}
-    
     news_items = []
 
-    for item in feed.entries[:TOTAL_FETCHED]:
-        text = f"{item.title} {item.summary}".lower()
-        if any([keyword in text for keyword in keywords]):
-            news_item = NewsItem(
-                title=item.title,
-                source="Yahoo Finance",
-                published=item.published,
-                summary=item.summary,
-                link=item.link
-            )
-            news_items.append(news_item)
-        # else:
-            # print(f"Filtered out text {text}.")
-            # print("-----")
-            # print(keywords)
-            # print("-----")
-            # print([keyword for keyword in keywords if keyword in text])
+    for url in feeds:
+        try:
+            feed = fetch_news_from_feedparser(url)
+        except Exception as e:
+            return {"errors": errors + [f"fetch_news failed: {e}"]}
+
+        for item in feed.entries[:TOTAL_FETCHED]:
+            title = item.get("title") or ""
+            summary = item.get("summary") or ""
+            text = f"{title} {summary}".lower()
+            if any([keyword in text for keyword in keywords]):
+                news_item = NewsItem(
+                    title=item.get("title") or "",
+                    source="Seeking Alpha" if "seekingalpha" in url else "Yahoo Finance",
+                    published=item.get("published") or None,
+                    summary=item.get("summary") or None,
+                    link=item.get("link") or None
+                )
+                news_items.append(news_item)
+            # else:
+                # print(f"Filtered out text {text}.")
+                # print("-----")
+                # print(keywords)
+                # print("-----")
+                # print([keyword for keyword in keywords if keyword in text])
            
     return {
         "news_items": news_items,

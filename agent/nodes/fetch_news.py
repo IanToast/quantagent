@@ -10,16 +10,16 @@ TOTAL_FETCHED = 30
     wait=wait_exponential(multiplier=1, min=2, max=10),
     reraise=True
 )
-def fetch_news_from_feedparser(url):
+def fetch_news_from_feedparser(url, ticker):
     try:
         feed = feedparser.parse(
             url,
             request_headers={"User-Agent": "Mozilla/5.0"}
         )
     except Exception as e:
-        raise ConnectionError(f"yfinance request failed: {e}")
+        raise ConnectionError(f"{url} request failed: {e}")
     if feed.bozo and len(feed.entries)==0:
-        raise ValueError(f"no data returned for {ticker}")
+        raise ValueError(f"no data returned from {url} for {ticker}")
     return feed
 
 def fetch_news_node(state):
@@ -51,7 +51,7 @@ def fetch_news_node(state):
 
     for url in feeds:
         try:
-            feed = fetch_news_from_feedparser(url)
+            feed = fetch_news_from_feedparser(url, ticker)
         except Exception as e:
             return {"errors": errors + [f"fetch_news failed: {e}"]}
 

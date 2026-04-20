@@ -77,7 +77,7 @@ def fetch_news_node(state):
            
     return {
         "news_items": news_items,
-        "news_filtered_count": TOTAL_FETCHED - len(news_items),
-        "news_total_count": TOTAL_FETCHED,
+        "news_filtered_count": TOTAL_FETCHED * 2 - len(news_items),
+        "news_total_count": TOTAL_FETCHED * 2,
         "errors": errors
     }

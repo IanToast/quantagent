@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from datetime import datetime
 from typing import Optional, Literal
 
 class PriceSummary(BaseModel):
@@ -62,3 +63,28 @@ class SentimentReport(BaseModel):
     catalysts: list[str]
     latent_risks: list[str]
     headline_count: int
+
+class ResearchReport(BaseModel):
+    ticker: str
+    company_name: str
+    sector: str
+    generated_at: datetime
+    current_price: float
+
+    # Synthesis
+    overall_signal: Literal["strong buy", "buy", "neutral", "sell", "strong sell"]
+    one_line_summary: str 
+    signal_rationale: str # expands on summary
+    time_horizon: Literal["short term", "medium term", "long term"]
+    risks: list[str]
+    catalysts: list[str]
+    key_metrics: list[str] 
+
+    # passed through from state (TODO)
+    # analyst_target_mean: Optional[float]
+    # analyst_target_high: Optional[float]
+    # analyst_target_low: Optional[float]
+
+    price_summary: PriceSummary
+    quant_signals: QuantSignals
+    sentiment: SentimentReport

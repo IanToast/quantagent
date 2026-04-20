@@ -140,7 +140,7 @@ def fetch_price_node(state):
     sector = info.get("sector") or "Unknown"
 
     return {
-        "company_name":company_name,
+        "company_name": company_name,
         "price_summary": price_summary,
         "quant_signals": quant_signals,
         "sector": sector,

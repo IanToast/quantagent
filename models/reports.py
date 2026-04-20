@@ -80,10 +80,10 @@ class ResearchReport(BaseModel):
     catalysts: list[str]
     key_metrics: list[str] 
 
-    # passed through from state (TODO)
-    # analyst_target_mean: Optional[float]
-    # analyst_target_high: Optional[float]
-    # analyst_target_low: Optional[float]
+    # passed through from state
+    analyst_target_mean: Optional[float]
+    analyst_target_high: Optional[float]
+    analyst_target_low: Optional[float]
 
     price_summary: PriceSummary
     quant_signals: QuantSignals

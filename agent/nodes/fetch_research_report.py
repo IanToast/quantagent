@@ -14,6 +14,10 @@ def fetch_research_report_node(state):
     company_name = state.get("company_name") or "company name unknown"
     sector = state.get("sector") or "sector unknown"
 
+    analyst_target_mean = state.get("analyst_target_mean") or "N/A"
+    analyst_target_high = state.get("analyst_target_high") or "N/A"
+    analyst_target_low = state.get("analyst_target_low") or "N/A"
+
     sentiment = state.get("sentiment")
     quant_signals = state.get("quant_signals")
     price_summary = state.get("price_summary")
@@ -39,7 +43,11 @@ def fetch_research_report_node(state):
     Strong Sell - high conviction bearish, multiple risk flags, limited upside
 
     'calculations_limited' on either price or quant input indicates incomplete data. 
-    Note this in 'signal_rationale' and discount affected signals
+    Note this in 'signal_rationale' and discount affected signals.
+
+    When analyst price targets are available, use them as a valuation 
+    anchor alongside the quantitative signals. Negative upside to mean 
+    target is a bearish signal even in strong momentum environments.
 """
 
     tools = [
@@ -100,14 +108,19 @@ def fetch_research_report_node(state):
                     "role": "user", 
                     "content": f"""Please analyze the following information for {company_name} ({ticker}), a {sector} company, and produce an investment recommendation:
 
-                    Price Summary:
-                    {price_summary}
+Price Summary:
+{price_summary}
 
-                    Quantitative Signals:
-                    {quant_signals}
+Quantitative Signals:
+{quant_signals}
 
-                    Sentiment Report:
-                    {sentiment}"""
+Sentiment Report:
+{sentiment}
+
+Analyst Consensus:
+Mean Price Target: {analyst_target_mean or 'N/A'}
+High Price Target: {analyst_target_high or 'N/A'}
+Low Price Target: {analyst_target_low or 'N/A'}"""
                 }
             ]
         )
@@ -126,10 +139,13 @@ def fetch_research_report_node(state):
             price_summary=price_summary,
             quant_signals=quant_signals,
             sentiment=sentiment,
+            analyst_target_mean=analyst_target_mean,
+            analyst_target_high=analyst_target_high,
+            analyst_target_low=analyst_target_low,
             **result
         )
     except Exception as e:
-        return {"errors": errors + [f"sentiment analysis failed: {e}"]}
+        return {"errors": errors + [f"research report failed: {e}"]}
 
     return {
         "research_report": research_report,

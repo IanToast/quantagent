@@ -16,18 +16,16 @@ def fetch_price_from_yfinance(ticker):
         df = t.history(period="2y")
     except Exception as e:
         raise ConnectionError(f"yfinance request failed: {e}")
-    
     if df is None or df.empty:
         raise ValueError(f"no data returned for {ticker}")
-    
-    return df, t.info
+    return df
 
 def fetch_price_node(state):
     errors = state.get("errors") or []
     ticker = state["ticker"].upper()
 
     try:
-        df, info = fetch_price_from_yfinance(ticker)
+        df = fetch_price_from_yfinance(ticker)
     except Exception as e:
         return {"errors": errors + [f"fetch_price failed: {e}"]}
 
@@ -103,7 +101,7 @@ def fetch_price_node(state):
         sharpe = round(float(annual_return / annual_vol), 3)
 
         try:
-            df_spy, info_spy = fetch_price_from_yfinance("SPY")
+            df_spy = fetch_price_from_yfinance("SPY")
         except Exception as e:
             return {"errors": errors + [f"fetch_price failed: {e}"]}
         spy_log_returns = np.log(df_spy["Close"] / df_spy["Close"].shift(1)).tail(60)
@@ -136,13 +134,8 @@ def fetch_price_node(state):
         calculations_limited=calculations_limited
     )
 
-    company_name = info.get("longName") or info.get("shortName") or ticker
-    sector = info.get("sector") or "Unknown"
-
     return {
-        "company_name": company_name,
         "price_summary": price_summary,
         "quant_signals": quant_signals,
-        "sector": sector,
         "errors": errors
     }

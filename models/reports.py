@@ -45,7 +45,7 @@ class QuantSignals(BaseModel):
     calculations_limited: bool
 
 class Theme(BaseModel):
-    trajectory: Literal["building", "peaking", "fading", "stable"]
+    trajectory: str # ideally something like Literal["building", "peaking", "fading", "stable", "deteriorating"]
     description: str
 
 class RiskFlag(BaseModel):
@@ -56,7 +56,7 @@ class SentimentReport(BaseModel):
     overall: Literal["bullish", "neutral", "bearish"]
     confidence: Literal["low", "medium", "high"]
     score: float = Field(ge=-1.0, le=1.0)
-    sentiment_trend: Literal["improving", "deteriorating", "stable", "mixed"]
+    sentiment_trend: str # ideally something like Literal["improving", "worsening", "stable", "mixed"]
     themes: list[Theme]
     inflections: list[str]
     risk_flags: list[RiskFlag]

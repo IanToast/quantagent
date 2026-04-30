@@ -100,7 +100,7 @@ def fetch_sentiment_analysis_node(state):
                     },
                     "sentiment_trend": {
                         "type": "string",
-                        "enum": ["improving", "deteriorating", "stable", "mixed"],
+                        "enum": ["improving", "worsening", "stable", "mixed"],
                         "description": "Explicitly identify how the sentimet is changing over the timeline" 
                     },
                     "themes": {
@@ -108,7 +108,7 @@ def fetch_sentiment_analysis_node(state):
                         "items": {
                             "type": "object",
                             "properties": {
-                                "trajectory": {"type": "string", "enum": ["building", "peaking", "fading", "stable"]},
+                                "trajectory": {"type": "string", "enum": ["building", "peaking", "fading", "stable", "deteriorating"]},
                                 "description": {"type": "string"}
                             },
                             "required": ["trajectory", "description"]

@@ -7,6 +7,7 @@ import anthropic
 import json
 import os
 import math
+import requests
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -15,8 +16,6 @@ haiku_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 MAX_FOR_LLM = 20
 NUMBER_OF_FEEDS = 3
 
-# TODO: add timeout handling to prevent feedparser from hanging indefinitely
-
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=2, max=10),
@@ -24,19 +23,23 @@ NUMBER_OF_FEEDS = 3
 )
 def fetch_news_from_feedparser(url, ticker):
     try:
-        feed = feedparser.parse(
+        response = requests.get(
             url,
-            request_headers={"User-Agent": "Mozilla/5.0"}
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=15
         )
+        feed = feedparser.parse(response.content)
+    except requests.exceptions.Timeout as e:
+        raise ConnectionError(f"{url} timed out: {e}")
     except Exception as e:
         raise ConnectionError(f"{url} request failed: {e}")
     if feed.bozo and len(feed.entries)==0:
         raise ValueError(f"no data returned from {url} for {ticker}")
     return feed
 
-def filter_relevant_articles(news_items: list, ticker: str, company_name: str) -> list:
+def filter_relevant_articles(news_items, ticker, company_name, errors):
     if not news_items:
-        return news_items
+        return news_items, errors
 
     headlines = "\n".join([
         f"{i+1}. {item.title}" + (f" — {item.summary[:150]}" if item.summary and "href" not in item.summary else "")
@@ -55,6 +58,9 @@ Headlines:
 {headlines}
 
 Output ONLY a JSON array of 0s and 1s, one per headline, in order. No explanation.
+
+IMPORTANT: You must output exactly {len(news_items)} scores, one per headline. 
+Do not add or skip any.
 """
 
     try:
@@ -70,11 +76,12 @@ Output ONLY a JSON array of 0s and 1s, one per headline, in order. No explanatio
         scores = json.loads(raw)
         if len(scores) != len(news_items):
             print(f"[fetch_news] Haiku returned {len(scores)} scores for {len(news_items)} articles, using unfiltered")
-            return news_items
-        return [item for item, score in zip(news_items, scores) if score == 1]
+            return news_items, errors
+        return [item for item, score in zip(news_items, scores) if score == 1], errors
     except Exception as e:
         print(f"[fetch_news] Haiku filter failed: {e}, returning unfiltered")
-        return news_items  # fail gracefully, return everything
+        errors.append(f"haiku_filter_failed: {e}")
+        return news_items, errors  # fail gracefully, return everything
 
 def fetch_news_node(state):
     errors = state.get("errors") or []
@@ -166,7 +173,7 @@ def fetch_news_node(state):
         key=lambda x: parsedate_to_datetime(x.published) if x.published else datetime.min,
         reverse=True
     )
-    filtered_items = filter_relevant_articles(news_items, ticker, company_name)
+    filtered_items, errors = filter_relevant_articles(news_items, ticker, company_name, errors)
 
     # Ensure source diversity in final selection
     google_items = [x for x in filtered_items if x.source == "Google News"][:math.ceil(MAX_FOR_LLM / NUMBER_OF_FEEDS)]

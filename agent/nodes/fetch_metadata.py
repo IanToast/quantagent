@@ -7,8 +7,11 @@ from tenacity import retry, stop_after_attempt, wait_exponential
     reraise=True
 )
 def fetch_info_from_yfinance(ticker):
-    t = yf.Ticker(ticker)
-    info = t.info
+    try:
+        t = yf.Ticker(ticker)
+        info = t.info
+    except Exception as e:
+        raise ConnectionError(f"yfinance request failed: {e}")
     if not info:
         raise ValueError(f"no info returned for {ticker}")
     return info

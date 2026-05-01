@@ -154,7 +154,7 @@ def fetch_sentiment_analysis_node(state):
             messages=[
                 {
                     "role": "user", 
-                    "content": f"Out of {news_total_count} articles retrieved mentioning {company_name} ({ticker}), {news_filtered_count} were filtered as irrelevant. Please analyze the remaining relevant articles (capped at {MAX_FOR_LLM}):\n\n{headlines_text}"
+                    "content": f"Out of {news_total_count} articles retrieved mentioning {company_name} ({ticker}), {news_filtered_count} were filtered as irrelevant. Please analyze the remaining relevant articles (capped at {len(news_items)}):\n\n{headlines_text}"
                 }
             ]
         )

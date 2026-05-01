@@ -6,8 +6,6 @@ load_dotenv()
 
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-MAX_FOR_LLM = 20
-
 def fetch_sentiment_analysis_node(state):
     errors = state.get("errors") or []
     news_items = state.get("news_items")
@@ -32,12 +30,10 @@ def fetch_sentiment_analysis_node(state):
             "errors": errors
         }
 
-    news_items = news_items[:MAX_FOR_LLM]
-
     headlines_text = ""
     for i, item in enumerate(news_items, 1):
         headlines_text += f"{i}. [{item.published}] {item.title}\n"
-        if item.summary:
+        if item.summary and "href" not in item.summary: # filter out html from google summaries
             headlines_text += f"   {item.summary}\n\n"
 
     prompt = f"""You are a quantitative analyst specializing in equity research with 

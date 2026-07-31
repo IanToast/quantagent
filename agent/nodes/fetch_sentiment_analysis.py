@@ -18,6 +18,7 @@ def fetch_sentiment_analysis_node(state):
         return {
             "sentiment": SentimentReport(
                 overall="neutral",
+                confidence="low",
                 score=0.0,
                 sentiment_trend="stable",
                 themes=[],
